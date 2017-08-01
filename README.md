@@ -63,6 +63,7 @@ epJSON input (with IDF converted output)
 
 ### Global factory
 
+New GLHEVert constructor that uses epJSON inputs
 ```cpp
 GLHEVert::GLHEVert( std::string const & name, json const & fields )
 	{
@@ -324,6 +325,21 @@ BuildingSurface:Detailed,
   15.24000,15.24000,0.0;  !- X,Y,Z ==> Vertex 4 {m}
 ```
 
+#### epJSON performance gains
+The table below shows this speed up for two different files; one reference building and one worst case input with an extreme number of surfaces (45,382 in 80 zones vs 871 in 118 zones). The table also shows the speed up in ProcessInput, parsing input, and parsing schema.
+
+|  | Outpatient |  |  | prj10 |  |  |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|  | E+ 8.5 Release | PR - IDF | PR - JSON | E+ 8.5 Release | PR - IDF | PR - JSON |
+| ProcessInput | 366 | 300 (18%) | 234 (36%) | 4322 | 3355 (22%) | 1637 (62%) |
+| GetSurfaceData | 28 | 13 (54%) | 13 (54%) | 72688 | 21001 (71%) | 21001 (71%) |
+| GetObjectItem | 38 | 29 (24%) | 29 (24%) | 41617 | 333 (99.2%) | 333 (99.2%) |
+| VerifyName | 2 | 0 (100%) | 0 (100%) | 11055 | 5 (99.9%) | 5 (99.9%) |
+| Parse IDF | 174 | 135 (22%) | 69 (60%) | 4130 | 3190 (23%) | 1472 (64%) |
+| Parse IDD | 192 | 165 (14%) | 165 (14%) | 192 | 165 (14%) | 165 (14%) |
+
+These numbers are probably conservative now (doesn't include embedded schema, etc)
+
 #### JSON Outputs
 
 * JSON outputs for Tabular and Timeseries outputs
@@ -380,12 +396,54 @@ eplusout.cbor - 1.2M (76% reduction)
 
 #### General thoughts
 
-* epJSON input will be used internally and as experimental input in 8.8 (to allow for schema changes and user input around key names)
+* epJSON input will be used internally and as experimental input in 8.8 (to allow for schema changes and user feedback around key names)
 
 * In EnergyPlus 8.9, epJSON becomes 1st class citizen along with IDF.
 
-* In EnergyPlus 9.0 or 9.1, deprecate IDF input, but still have automatic translation within E+
+* In EnergyPlus 9.0 or 9.1 (or later?), deprecate IDF input, but still have automatic translation within E+
 
 * In future version of Energyplus, finally remove IDF input, freeze IDD/IDF, and move translation program out of E+
 
 * This should minimize impact on existing IDF workflows and provide a long time for users/companies to transition.
+
+#### Deprecation
+
+OpenStudio deprecation
+
+Compile time deprecation warning for developers (will cause compiler warnings)
+```cpp
+#ifdef __GNUC__
+  #define OS_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+  /// In MSVC this will generate warning C4996
+  /// To intentionally disable this warning, e.g. in test code that still uses deprecated functionality
+  /// place this around the code that uses the deprecated functionality
+  /// #if defined(_MSC_VER)
+  ///   #pragma warning( push )
+  ///   #pragma warning( disable : 4996 )
+  /// #endif
+  /// Some code
+  /// #if defined(_MSC_VER)
+  ///   #pragma warning( pop )
+  /// #endif
+
+  #define OS_DEPRECATED __declspec(deprecated)
+#else
+  #pragma message("WARNING: You need to implement DEPRECATED for this compiler")
+  #define OS_DEPRECATED
+#endif
+```
+
+Deprecation warning to end users (E+ can do something similar within InputProcessor)
+```cpp
+/** \deprecated Node::addSetpointManager has been deprecated and will be removed in a future release, please use SetpointManagerSingleZoneReheat::addToNode \n
+  * Adds setPointManager of type SetpointManagerSingleZoneReheat to this Node. **/
+OS_DEPRECATED void addSetpointManager( SetpointManagerSingleZoneReheat & setPointManager );
+
+void Node_Impl::addSetpointManager(SetpointManagerSingleZoneReheat & singleZoneReheat)
+{
+  LOG(Warn, "Node::addSetpointManager has been deprecated and will be removed in a future release, please use SetpointManagerSingleZoneReheat::addToNode");
+  Node node = this->getObject<Node>();
+  singleZoneReheat.addToNode(node);
+}
+```
