@@ -66,39 +66,39 @@ epJSON input (with IDF converted output)
 New GLHEVert constructor that uses epJSON inputs
 ```cpp
 GLHEVert::GLHEVert( std::string const & name, json const & fields )
-	{
-		bool errorsFound = false;
-		std::string const cCurrentModuleObject = "GroundHeatExchanger:Vertical";
+{
+  bool errorsFound = false;
+  std::string const cCurrentModuleObject = "GroundHeatExchanger:Vertical";
 
-		Name = name;
-		UtilityRoutines::IsNameEmpty( Name, cCurrentModuleObject, errorsFound );
+  Name = name;
+  UtilityRoutines::IsNameEmpty( Name, cCurrentModuleObject, errorsFound );
 
-		auto const inletNodeName = UtilityRoutines::MakeUPPERCase( fields.at( "inlet_node_name" ) );
-		auto const outletNodeName = UtilityRoutines::MakeUPPERCase( fields.at( "outlet_node_name" ) );
+  auto const inletNodeName = UtilityRoutines::MakeUPPERCase( fields.at( "inlet_node_name" ) );
+  auto const outletNodeName = UtilityRoutines::MakeUPPERCase( fields.at( "outlet_node_name" ) );
 
-		//get inlet node num
-		inletNodeNum = NodeInputManager::GetOnlySingleNode( inletNodeName, errorsFound, cCurrentModuleObject, Name, NodeType_Water, NodeConnectionType_Inlet, 1, ObjectIsNotParent );
-		//get outlet node num
-		outletNodeNum = NodeInputManager::GetOnlySingleNode( outletNodeName, errorsFound, cCurrentModuleObject, Name, NodeType_Water, NodeConnectionType_Inlet, 1, ObjectIsNotParent );
+  //get inlet node num
+  inletNodeNum = NodeInputManager::GetOnlySingleNode( inletNodeName, errorsFound, cCurrentModuleObject, Name, NodeType_Water, NodeConnectionType_Inlet, 1, ObjectIsNotParent );
+  //get outlet node num
+  outletNodeNum = NodeInputManager::GetOnlySingleNode( outletNodeName, errorsFound, cCurrentModuleObject, Name, NodeType_Water, NodeConnectionType_Inlet, 1, ObjectIsNotParent );
 
-		available = true;
-		on = true;
+  available = true;
+  on = true;
 
-		BranchNodeConnections::TestCompSet( cCurrentModuleObject, Name, inletNodeName, outletNodeName, "Condenser Water Nodes" );
+  BranchNodeConnections::TestCompSet( cCurrentModuleObject, Name, inletNodeName, outletNodeName, "Condenser Water Nodes" );
 
-		//load borehole data
-		designFlow = fields.at( "design_flow_rate" );
-		PlantUtilities::RegisterPlantCompDesignFlow( inletNodeNum, designFlow );
+  //load borehole data
+  designFlow = fields.at( "design_flow_rate" );
+  PlantUtilities::RegisterPlantCompDesignFlow( inletNodeNum, designFlow );
 
-		numBoreholes = fields.at( "number_of_bore_holes" );
-		boreholeLength = fields.at( "bore_hole_length" );
-		boreholeRadius = fields.at( "bore_hole_radius" );
-		kGround = fields.at( "ground_thermal_conductivity" );
-		cpRhoGround = fields.at( "ground_thermal_heat_capacity" );
-		tempGround = fields.at( "ground_temperature" );
-		kGrout = fields.at( "grout_thermal_conductivity" );
-    ...
-  }
+  numBoreholes = fields.at( "number_of_bore_holes" );
+  boreholeLength = fields.at( "bore_hole_length" );
+  boreholeRadius = fields.at( "bore_hole_radius" );
+  kGround = fields.at( "ground_thermal_conductivity" );
+  cpRhoGround = fields.at( "ground_thermal_heat_capacity" );
+  tempGround = fields.at( "ground_temperature" );
+  kGrout = fields.at( "grout_thermal_conductivity" );
+  ...
+}
 ```
 
 Example showing `objectFactory()` usage
@@ -126,20 +126,20 @@ std::size_t GLHEVert::objectTypeHash() {
 
 The data "storage" for all constructed classes
 ```cpp
-	using deleter_t = std::function< void( void * ) >;
-	using unique_void_ptr = std::unique_ptr< void, deleter_t >;
+using deleter_t = std::function< void( void * ) >;
+using unique_void_ptr = std::unique_ptr< void, deleter_t >;
 
-	template< typename T >
-	auto unique_void( T * ptr ) -> unique_void_ptr
-	{
-		auto deleter = []( void * data ) -> void {
-			T * p = static_cast< T * >( data );
-			delete p;
-		};
-		return std::unique_ptr< void, deleter_t >( ptr, deleter );
-	}
+template< typename T >
+auto unique_void( T * ptr ) -> unique_void_ptr
+{
+  auto deleter = []( void * data ) -> void {
+    T * p = static_cast< T * >( data );
+    delete p;
+  };
+  return std::unique_ptr< void, deleter_t >( ptr, deleter );
+}
 
-	std::unordered_map< std::size_t, std::unordered_map< std::string, unique_void_ptr > > storage;
+std::unordered_map< std::size_t, std::unordered_map< std::string, unique_void_ptr > > storage;
 ```
 
 How to add new objects to data storage
@@ -271,37 +271,37 @@ Example epJSON
 {
   "BuildingSurface:Detailed": {
     "Zn001:Flr001": {
-        "construction_name": "FLOOR",
-        "number_of_vertices": 4,
-        "outside_boundary_condition": "Adiabatic",
-        "outside_boundary_condition_object": "",
-        "sun_exposure": "NoSun",
-        "surface_type": "Floor",
-        "vertices": [
-            {
-                "vertex_x_coordinate": 15.24,
-                "vertex_y_coordinate": 0.0,
-                "vertex_z_coordinate": 0.0
-            },
-            {
-                "vertex_x_coordinate": 0.0,
-                "vertex_y_coordinate": 0.0,
-                "vertex_z_coordinate": 0.0
-            },
-            {
-                "vertex_x_coordinate": 0.0,
-                "vertex_y_coordinate": 15.24,
-                "vertex_z_coordinate": 0.0
-            },
-            {
-                "vertex_x_coordinate": 15.24,
-                "vertex_y_coordinate": 15.24,
-                "vertex_z_coordinate": 0.0
-            }
-        ],
-        "view_factor_to_ground": 1,
-        "wind_exposure": "NoWind",
-        "zone_name": "ZONE ONE"
+      "construction_name": "FLOOR",
+      "number_of_vertices": 4,
+      "outside_boundary_condition": "Adiabatic",
+      "outside_boundary_condition_object": "",
+      "sun_exposure": "NoSun",
+      "surface_type": "Floor",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 15.24,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 15.24,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 15.24,
+          "vertex_y_coordinate": 15.24,
+          "vertex_z_coordinate": 0.0
+        }
+      ],
+      "view_factor_to_ground": 1,
+      "wind_exposure": "NoWind",
+      "zone_name": "ZONE ONE"
     }
 }
 ```
